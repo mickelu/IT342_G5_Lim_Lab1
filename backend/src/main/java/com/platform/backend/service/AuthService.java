@@ -1,11 +1,12 @@
 package com.platform.backend.service;
 
+import com.platform.backend.dto.LoginRequest;
+import com.platform.backend.dto.RegisterRequest;
+import com.platform.backend.dto.UserResponse;
 import com.platform.backend.entity.User;
 import com.platform.backend.repository.UserRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.util.Optional;
 
 @Service
 public class AuthService {
@@ -19,39 +20,42 @@ public class AuthService {
     }
 
     // REGISTER
-    public User register(String username, String email, String password) {
+    public UserResponse register(RegisterRequest request) {
 
-        // check if user exists
-        if (userRepository.findByEmail(email).isPresent()) {
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new RuntimeException("Email already in use");
         }
 
-        // encrypt password
-        String encodedPassword = passwordEncoder.encode(password);
+        String encodedPassword = passwordEncoder.encode(request.getPassword());
 
         User user = new User();
-        user.setUsername(username);
-        user.setEmail(email);
+        user.setUsername(request.getUsername());
+        user.setEmail(request.getEmail());
         user.setPassword(encodedPassword);
 
-        return userRepository.save(user);
+        userRepository.save(user);
+        return mapToResponse(user);
     }
 
     // LOGIN
-    public User login(String email, String password) {
+    public UserResponse login(LoginRequest request) {
 
-        Optional<User> userOpt = userRepository.findByEmail(email);
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (userOpt.isEmpty()) {
-            throw new RuntimeException("User not found");
-        }
-
-        User user = userOpt.get();
-
-        if (!passwordEncoder.matches(password, user.getPassword())) {
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new RuntimeException("Invalid password");
         }
 
-        return user;
+        return mapToResponse(user);
+    }
+
+    // Mapper (Entity → DTO)
+    private UserResponse mapToResponse(User user) {
+        UserResponse res = new UserResponse();
+        res.setId(user.getId());
+        res.setUsername(user.getUsername());
+        res.setEmail(user.getEmail());
+        return res;
     }
 }

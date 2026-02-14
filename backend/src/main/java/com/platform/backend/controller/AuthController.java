@@ -1,12 +1,14 @@
 package com.platform.backend.controller;
 
-import com.platform.backend.entity.User;
+import com.platform.backend.dto.LoginRequest;
+import com.platform.backend.dto.RegisterRequest;
+import com.platform.backend.dto.UserResponse;
 import com.platform.backend.service.AuthService;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "*") // for React later
+@CrossOrigin(origins = "*")
 public class AuthController {
 
     private final AuthService authService;
@@ -17,20 +19,13 @@ public class AuthController {
 
     // REGISTER
     @PostMapping("/register")
-    public User register(@RequestBody RegisterRequest request) {
-        return authService.register(
-                request.getUsername(),
-                request.getEmail(),
-                request.getPassword()
-        );
+    public UserResponse register(@RequestBody RegisterRequest request) {
+        return authService.register(request);
     }
 
     // LOGIN
     @PostMapping("/login")
-    public User login(@RequestBody LoginRequest request) {
-        return authService.login(
-                request.getEmail(),
-                request.getPassword()
-        );
+    public UserResponse login(@RequestBody LoginRequest request) {
+        return authService.login(request);
     }
 }
